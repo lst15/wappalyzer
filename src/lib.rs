@@ -3,7 +3,7 @@ extern crate lazy_static;
 
 pub mod wapp;
 
-use headless_chrome::protocol::cdp::Network::{GetCookies, GetResponseBodyReturnObject};
+use headless_chrome::protocol::cdp::Network::GetResponseBodyReturnObject;
 use headless_chrome::{Browser, LaunchOptions, Tab};
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
@@ -149,10 +149,7 @@ async fn fetch(url: Url) -> Option<Arc<wapp::RawData>> {
         .into_iter()
         .map(|(a, b)| (a.to_lowercase(), b.to_string().replace("\"", "")))
         .collect();
-    // Revisiting since cookies aren't always detected on first tab.
     let cookies: Vec<wapp::Cookie> = tab
-        .navigate_to(url.as_str())
-        .ok()?
         .get_cookies()
         .ok()?
         .into_iter()
