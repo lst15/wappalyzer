@@ -272,7 +272,7 @@ fn check_text(maybe_regex: &str, text: &str) -> bool {
     let maybe_regex = maybe_regex
         .splitn(2, "\\;")
         .next()
-        .unwrap_or(maybe_regex);
+        .unwrap_or(maybe_regex.as_str());
     match Regex::new(maybe_regex) {
         Ok(re) => {
             //println!("REGEX IS FINE: [{}] - trying on [{}] and got {:?}", maybe_regex, text, re.is_match(text));

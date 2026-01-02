@@ -168,18 +168,14 @@ async fn fetch(url: Url) -> Option<Arc<wapp::RawData>> {
         .lock()
         .unwrap()
         .first()
-        .unwrap()
-        .0
-        .response
-        .headers
-        .0
-        .unwrap()
-        .as_object()
-        .unwrap()
-        .clone()
-        .into_iter()
-        .map(|(a, b)| (a.to_lowercase(), b.to_string().replace("\"", "")))
-        .collect();
+        .and_then(|(response, _)| response.response.headers.0.as_ref())
+        .and_then(|headers| headers.as_object())
+        .map(|headers| {
+            headers
+                .iter()
+                .map(|(a, b)| (a.to_lowercase(), b.to_string().replace("\"", "")))
+                .collect()
+        })?;
     let cookies: Vec<wapp::Cookie> = tab
         .get_cookies()
         .ok()?
