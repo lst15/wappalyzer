@@ -4,14 +4,18 @@ extern crate lazy_static;
 pub mod wapp;
 
 use headless_chrome::protocol::cdp::Network::{GetCookies, GetResponseBodyReturnObject};
-use headless_chrome::{Browser, LaunchOptions, Tab};
+use headless_chrome::{Browser, Tab};
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fmt;
+use std::io::{Read, Write};
+use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
 use url::Url;
 use wapp::{RawData, Tech};
+
+const DEFAULT_BROWSER_WS_ENDPOINT: &str = "ws://190.102.43.107:9222";
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Analysis {
@@ -104,14 +108,10 @@ fn get_html(tab: &Tab) -> Option<String> {
 }
 
 async fn fetch(url: Url) -> Option<Arc<wapp::RawData>> {
-    let browser = Browser::new(
-        LaunchOptions::default_builder()
-            .port(Some(8242))
-            .sandbox(false)
-            .build()
-            .unwrap(),
-    )
-        .unwrap();
+    let browser_ws_endpoint = std::env::var("BROWSER_WS_ENDPOINT")
+        .unwrap_or_else(|_| DEFAULT_BROWSER_WS_ENDPOINT.to_string());
+    ensure_remote_tab(&browser_ws_endpoint);
+    let browser = Browser::connect(browser_ws_endpoint).ok()?;
 
     let tab = browser.wait_for_initial_tab().ok()?;
 
@@ -190,4 +190,31 @@ async fn fetch(url: Url) -> Option<Arc<wapp::RawData>> {
     });
 
     Some(raw_data)
+}
+
+fn ensure_remote_tab(browser_ws_endpoint: &str) {
+    let url = match Url::parse(browser_ws_endpoint) {
+        Ok(url) => url,
+        Err(_) => return,
+    };
+    let host = match url.host_str() {
+        Some(host) => host,
+        None => return,
+    };
+    let port = match url.port_or_known_default() {
+        Some(port) => port,
+        None => return,
+    };
+    let request = format!(
+        "GET /json/new HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
+    );
+    let mut stream = match TcpStream::connect((host, port)) {
+        Ok(stream) => stream,
+        Err(_) => return,
+    };
+    if stream.write_all(request.as_bytes()).is_err() {
+        return;
+    }
+    let mut response = Vec::new();
+    let _ = stream.read_to_end(&mut response);
 }
