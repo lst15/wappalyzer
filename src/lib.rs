@@ -17,6 +17,7 @@ use wapp::{RawData, Tech};
 pub struct Analysis {
     pub url: String,
     pub result: Result<HashSet<Tech>, String>,
+    pub scan_time: Option<Duration>,
 }
 
 /// Possible Errors in the domain_info lib
@@ -59,22 +60,37 @@ impl From<std::str::Utf8Error> for WappError {
     }
 }
 
-pub async fn scan(url: Url) -> Analysis {
-    let url_str = String::from(url.as_str());
-    match fetch(url).await {
+use std::time::{Duration, Instant};
+
+pub async fn scan(url: Url, with_timing: Option<bool>) -> Analysis {
+    let url_str = url.as_str().to_string();
+
+    let start = match with_timing {
+        Some(true) => Some(Instant::now()),
+        _ => None,
+    };
+
+    let analysis = match fetch(url).await {
         Some(raw_data) => {
-            let analysis : HashSet<Tech> = wapp::check(raw_data).await.into_iter().collect();
+            let result: HashSet<Tech> =
+                wapp::check(raw_data).await.into_iter().collect();
+
             Analysis {
                 url: url_str,
-                result: Ok(analysis),
+                result: Ok(result),
+                scan_time: start.map(|s| s.elapsed()),
             }
         }
         None => Analysis {
             url: url_str,
             result: Err("Error".to_string()),
+            scan_time: start.map(|s| s.elapsed()),
         },
-    }
+    };
+
+    analysis
 }
+
 
 fn get_html(tab: &Tab) -> Option<String> {
     let remote_object = tab
