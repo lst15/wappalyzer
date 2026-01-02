@@ -4,7 +4,7 @@ extern crate lazy_static;
 pub mod wapp;
 
 use headless_chrome::protocol::cdp::Network::{GetCookies, GetResponseBodyReturnObject};
-use headless_chrome::{Browser, LaunchOptions, Tab};
+use headless_chrome::{Browser, Tab};
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -12,6 +12,8 @@ use std::fmt;
 use std::sync::{Arc, Mutex};
 use url::Url;
 use wapp::{RawData, Tech};
+
+const DEFAULT_BROWSER_WS_ENDPOINT: &str = "ws://190.102.43.107:9222";
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Analysis {
@@ -104,14 +106,9 @@ fn get_html(tab: &Tab) -> Option<String> {
 }
 
 async fn fetch(url: Url) -> Option<Arc<wapp::RawData>> {
-    let browser = Browser::new(
-        LaunchOptions::default_builder()
-            .port(Some(8242))
-            .sandbox(false)
-            .build()
-            .unwrap(),
-    )
-        .unwrap();
+    let browser_ws_endpoint = std::env::var("BROWSER_WS_ENDPOINT")
+        .unwrap_or_else(|_| DEFAULT_BROWSER_WS_ENDPOINT.to_string());
+    let browser = Browser::connect(browser_ws_endpoint).unwrap();
 
     let tab = browser.wait_for_initial_tab().ok()?;
 
