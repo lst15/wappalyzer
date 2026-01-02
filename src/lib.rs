@@ -104,7 +104,7 @@ pub async fn scan(url: Url, with_timing: Option<bool>) -> Analysis {
         _ => None,
     };
 
-    let analysis = match fetch(url).await {
+    match fetch(url).await {
         Some(raw_data) => {
             let result: HashSet<Tech> =
                 wapp::check(raw_data).await.into_iter().collect();
@@ -120,9 +120,7 @@ pub async fn scan(url: Url, with_timing: Option<bool>) -> Analysis {
             result: Err("Error".to_string()),
             scan_time: start.map(|s| s.elapsed()),
         },
-    };
-
-    analysis
+    }
 }
 
 
@@ -166,23 +164,18 @@ async fn fetch(url: Url) -> Option<Arc<wapp::RawData>> {
 
     let html = get_html(rendered_tab).unwrap();
 
-    let final_responses: Vec<_> = responses.lock().unwrap().clone();
-
-    let headers: HashMap<String, String> = final_responses
-        .into_iter()
-        .nth(0)
+    let headers: HashMap<String, String> = responses
+        .lock()
         .unwrap()
-        .0
-        .response
-        .headers
-        .0
-        .unwrap()
-        .as_object()
-        .unwrap()
-        .clone()
-        .into_iter()
-        .map(|(a, b)| (a.to_lowercase(), b.to_string().replace("\"", "")))
-        .collect();
+        .first()
+        .and_then(|(response, _)| response.response.headers.0.as_ref())
+        .and_then(|headers| headers.as_object())
+        .map(|headers| {
+            headers
+                .iter()
+                .map(|(a, b)| (a.to_lowercase(), b.to_string().replace("\"", "")))
+                .collect()
+        })?;
     let cookies: Vec<wapp::Cookie> = tab
         .get_cookies()
         .ok()?
@@ -196,8 +189,9 @@ async fn fetch(url: Url) -> Option<Arc<wapp::RawData>> {
 
     let parsed_html = Html::parse_fragment(&html);
     let selector = Selector::parse("meta").unwrap();
+    let script_selector = Selector::parse("script").ok()?;
     let mut script_tags = vec![];
-    for js in parsed_html.select(&Selector::parse("script").ok()?) {
+    for js in parsed_html.select(&script_selector) {
         script_tags.push(js.html());
     }
 
