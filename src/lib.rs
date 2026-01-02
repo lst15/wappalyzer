@@ -13,11 +13,45 @@ use std::sync::{Arc, Mutex};
 use url::Url;
 use wapp::{RawData, Tech};
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub struct Analysis {
     pub url: String,
     pub result: Result<HashSet<Tech>, String>,
     pub scan_time: Option<Duration>,
+}
+
+#[derive(Serialize)]
+struct AnalysisOutput {
+    scan_time_seconds: Option<f64>,
+    technologies: Vec<Tech>,
+}
+
+impl From<&Analysis> for AnalysisOutput {
+    fn from(analysis: &Analysis) -> Self {
+        let mut technologies = match &analysis.result {
+            Ok(result) => result.iter().cloned().collect::<Vec<_>>(),
+            Err(_) => Vec::new(),
+        };
+        technologies.sort_by(|a, b| {
+            a.category
+                .cmp(&b.category)
+                .then_with(|| a.name.cmp(&b.name))
+        });
+        AnalysisOutput {
+            scan_time_seconds: analysis.scan_time.map(|time| time.as_secs_f64()),
+            technologies,
+        }
+    }
+}
+
+impl fmt::Debug for Analysis {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let output = AnalysisOutput::from(self);
+        match serde_json::to_string_pretty(&output) {
+            Ok(json) => write!(f, "{}", json),
+            Err(_) => write!(f, "{{\"scan_time_seconds\":null,\"technologies\":[]}}"),
+        }
+    }
 }
 
 /// Possible Errors in the domain_info lib
