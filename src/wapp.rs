@@ -66,6 +66,7 @@ lazy_static! {
 pub struct Tech {
     pub category: String,
     pub name: String,
+    pub version: Option<String>,
 }
 impl Tech {
     /// let tech = Tech::named("webpack");
@@ -83,6 +84,7 @@ impl Tech {
         Tech {
             name: app.name.clone(),
             category: app.category_name(),
+            version: None,
         }
     }
 }

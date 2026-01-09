@@ -16,9 +16,9 @@ let url = Url::parse(&String::from("http://google.com"))?;
 let res = wappalyzer::scan(url).await;
 println!("{:?}", res);
 
-// Analysis { url: "http://google.com/", result: Ok([Tech { category: "Web Servers", 
-// name: "Google Web Server" }, Tech { category: "JavaScript Frameworks", name: "ExtJS" }
-//, Tech { category: "JavaScript Libraries", name: "List.js" }]) }
+// Analysis { url: "http://google.com/", result: Ok([Tech { category: "Web Servers",
+// name: "Google Web Server", version: None }, Tech { category: "JavaScript Frameworks", name: "ExtJS", version: None }
+//, Tech { category: "JavaScript Libraries", name: "List.js", version: None }]) }
 ```
 
 Or from the executable
@@ -30,15 +30,18 @@ Or from the executable
     "Ok": [
       {
         "category": "Web Servers",
-        "name": "Google Web Server"
+        "name": "Google Web Server",
+        "version": null
       },
       {
         "category": "JavaScript Libraries",
-        "name": "List.js"
+        "name": "List.js",
+        "version": null
       },
       {
         "category": "JavaScript Frameworks",
-        "name": "ExtJS"
+        "name": "ExtJS",
+        "version": null
       }
     ]
   }
@@ -53,7 +56,7 @@ http://bbc.com/
 http://cnn.com/
 
 > cat urls.list | cargo run
-{"url":"http://google.com/","result":{"Ok":[{"category":"JavaScript Frameworks","name":"ExtJS"},{"category":"Web Servers","name":"Google Web Server"},{"category":"JavaScript Libraries","name":"List.js"}]}}
-{"url":"http://bbc.com/","result":{"Ok":[{"category":"Tag Managers","name":"Google Tag Manager"},{"category":"Analytics","name":"Chartbeat"},{"category":"JavaScript Frameworks","name":"React"},{"category":"Cache Tools","name":"Varnish"},{"category":"Web Servers","name":"Apache"},{"category":"Issue Trackers","name":"Atlassian Jira"},{"category":"Analytics","name":"GrowingIO"},{"category":"JavaScript Libraries","name":"List.js"},{"category":"JavaScript Graphics","name":"Chart.js"},{"category":"Analytics","name":"Optimizely"},{"category":"Analytics","name":"Segment"}]}}
-{"url":"http://cnn.com/","result":{"Ok":[{"category":"JavaScript Frameworks","name":"ExtJS"},{"category":"JavaScript Frameworks","name":"Twitter Flight"},{"category":"JavaScript Frameworks","name":"Riot"},{"category":"Advertising Networks","name":"Criteo"},{"category":"Analytics","name":"Chartbeat"},{"category":"Analytics","name":"GoSquared"},{"category":"JavaScript Libraries","name":"Moment.js"},{"category":"Ecommerce","name":"Magento"},{"category":"JavaScript Frameworks","name":"React"},{"category":"Cache Tools","name":"Varnish"},{"category":"Analytics","name":"GrowingIO"},{"category":"JavaScript Libraries","name":"List.js"},{"category":"JavaScript Graphics","name":"Chart.js"},{"category":"Comment Systems","name":"Livefyre"},{"category":"Analytics","name":"Optimizely"},{"category":"Analytics","name":"Segment"}]}}
+{"url":"http://google.com/","result":{"Ok":[{"category":"JavaScript Frameworks","name":"ExtJS","version":null},{"category":"Web Servers","name":"Google Web Server","version":null},{"category":"JavaScript Libraries","name":"List.js","version":null}]}}
+{"url":"http://bbc.com/","result":{"Ok":[{"category":"Tag Managers","name":"Google Tag Manager","version":null},{"category":"Analytics","name":"Chartbeat","version":null},{"category":"JavaScript Frameworks","name":"React","version":null},{"category":"Cache Tools","name":"Varnish","version":null},{"category":"Web Servers","name":"Apache","version":null},{"category":"Issue Trackers","name":"Atlassian Jira","version":null},{"category":"Analytics","name":"GrowingIO","version":null},{"category":"JavaScript Libraries","name":"List.js","version":null},{"category":"JavaScript Graphics","name":"Chart.js","version":null},{"category":"Analytics","name":"Optimizely","version":null},{"category":"Analytics","name":"Segment","version":null}]}}
+{"url":"http://cnn.com/","result":{"Ok":[{"category":"JavaScript Frameworks","name":"ExtJS","version":null},{"category":"JavaScript Frameworks","name":"Twitter Flight","version":null},{"category":"JavaScript Frameworks","name":"Riot","version":null},{"category":"Advertising Networks","name":"Criteo","version":null},{"category":"Analytics","name":"Chartbeat","version":null},{"category":"Analytics","name":"GoSquared","version":null},{"category":"JavaScript Libraries","name":"Moment.js","version":null},{"category":"Ecommerce","name":"Magento","version":null},{"category":"JavaScript Frameworks","name":"React","version":null},{"category":"Cache Tools","name":"Varnish","version":null},{"category":"Analytics","name":"GrowingIO","version":null},{"category":"JavaScript Libraries","name":"List.js","version":null},{"category":"JavaScript Graphics","name":"Chart.js","version":null},{"category":"Comment Systems","name":"Livefyre","version":null},{"category":"Analytics","name":"Optimizely","version":null},{"category":"Analytics","name":"Segment","version":null}]}}
 ```
