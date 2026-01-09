@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate lazy_static;
 
+mod heuristics;
 pub mod wapp;
 
 use headless_chrome::protocol::cdp::Network::GetResponseBodyReturnObject;

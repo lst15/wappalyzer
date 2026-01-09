@@ -8,6 +8,8 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
+use crate::heuristics::VersionInference;
+
 extern crate lazy_static;
 
 // The build.rs build script reads the local apps.json file at build time
@@ -59,6 +61,7 @@ lazy_static! {
 
         apps_json_data
     };
+    static ref VERSION_INFERENCE: VersionInference = VersionInference::new_default();
 }
 
 /// A technology that is found on a page
@@ -81,10 +84,14 @@ impl Tech {
     // }
 
     pub fn from(app: &App) -> Tech {
+        Tech::from_with_version(app, None)
+    }
+
+    pub fn from_with_version(app: &App, version: Option<String>) -> Tech {
         Tech {
             name: app.name.clone(),
             category: app.category_name(),
-            version: None,
+            version,
         }
     }
 }
@@ -147,6 +154,30 @@ impl App {
         APPS_JSON_DATA.category_name(self.cats[0]).unwrap()
     }
 
+    pub fn headers(&self) -> &HashMap<String, String> {
+        &self.headers
+    }
+
+    pub fn cookies(&self) -> &HashMap<String, String> {
+        &self.cookies
+    }
+
+    pub fn meta(&self) -> &HashMap<String, String> {
+        &self.meta
+    }
+
+    pub fn html(&self) -> &[String] {
+        &self.html
+    }
+
+    pub fn script(&self) -> &[String] {
+        &self.script
+    }
+
+    pub fn js(&self) -> &HashMap<String, String> {
+        &self.js
+    }
+
     // pub fn check_headers(&self,)
     // pub async fn tech(
     //     &self,
@@ -171,9 +202,12 @@ impl App {
             if self.check(raw_data.clone()) {
                 let mut tech = vec![];
                 for i in &self.implies {
-                    tech.push(Tech::from(APPS_JSON_DATA.apps.get(i)?));
+                    let app = APPS_JSON_DATA.apps.get(i)?;
+                    let version = VERSION_INFERENCE.infer(app, raw_data.as_ref());
+                    tech.push(Tech::from_with_version(app, version));
                 }
-                tech.push(Tech::from(self));
+                let version = VERSION_INFERENCE.infer(self, raw_data.as_ref());
+                tech.push(Tech::from_with_version(self, version));
                 Some(tech)
             } else {
                 None
